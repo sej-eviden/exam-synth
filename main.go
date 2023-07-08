@@ -86,13 +86,12 @@ func makeDirs(outdir, examName string) error {
 }
 
 func main() {
-
 	dir := flag.String("dir", "./exams", "Path to the folder where the \"raw\" exams are located")
 	dest := flag.String("dest", "./results", "Path to the output folder")
 	// src := flag.String("src", "./", "The folder or path where the aztfexport files are located")
 	// cref := flag.String("conf", "./", "The folder or path where the yaml config file is located")
 	// check := flag.Bool("validate", false, "Validate the contents of the yaml config against the terraform file")
-	//
+
 	flag.Parse()
 	fmt.Println(*dir)
 	fmt.Println(*dest)

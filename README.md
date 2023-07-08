@@ -2,6 +2,8 @@
 
 ## Purpose
 
+test tests
+
 > Scrape Exam Topics exams, but better.
 
 Pseudo-scrape html page to get json data of exams & questions.
@@ -18,10 +20,10 @@ any step away from this, is a step bakwards.
 ## Roadmap
 
 - [ ] Port all *features* from original Python code
-    - [ ] Create necessary folders (results + specific)
+    - [x] Create necessary folders (results + specific)
     - [ ] Scrape all questions from html
     - [ ] Produce json
-- [ ] Create `img` folder too
+- [x] Create `img` folder too
 - [ ] Paste imgs from original to the destination folder
 - [ ] Create `master` file with general information about the exam (img answers,
 empty answers, amount of questions, amount of topics, alternative names (code), etc.)
