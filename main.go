@@ -65,9 +65,57 @@ func processDir(dirName string) {
 	}
 }
 
+type question struct {
+	title   string
+	body    []string
+	options []string
+	answer  string
+}
+
+type questions map[string]question
+
 // parseExam reads through the contents of the exam file and creates a struct/json
 func parseExam(file []byte) {
 	fmt.Println("Parsing file")
+	rawFile := string(file[:])
+	lines := strings.Split(rawFile, "\n")
+	var title, fileTitle string
+	// var currentTitleI, questionI, currentBodyI, currentOptionI int
+	var currentTitleI, questionI int
+
+	var q question
+
+	for i, line := range lines {
+		if i > 1 && strings.Index(lines[i-1], "<h1") >= 0 {
+			fileTitle = strings.Trim(strings.Split(line, "Exam Actual Questions")[0], " ")
+		}
+
+		if strings.Index(line, "<div class=\"card-header text-white bg-primary\">") >= 0 {
+			currentTitleI = i
+			questionI += 1
+		}
+
+		if i == currentTitleI + 1 && questionI > 0 {
+			titleA := strings.Fields( strings.Trim(strings.Replace(line, "#", "", 1), " "))
+			title = titleA[0] + fmt.Sprintf(" %03s", titleA[1])
+
+			fmt.Print(title)
+		}
+
+		if i == currentTitleI + 3 && questionI > 0 {
+			topicA := strings.Fields( strings.Trim(line, " "))
+			topic := topicA[0] + fmt.Sprintf(" %02s", topicA[1])
+
+			fmt.Printf(" | %s\n", topic)
+			
+			q.title = fmt.Sprintf("%s | %s", title, topic)
+			// title = " ".join([word.rjust(3, "0") for word in title.split(" ") if word != "|"])
+		}
+		fmt.Println(q)
+	}
+	fmt.Println("\n*****************")
+	fmt.Printf("File title: %s\nNumber of questions: %d\nLast title: %s\n", fileTitle, questionI, title)
+	fmt.Print("*****************\n\n")
 
 }
 
@@ -104,7 +152,7 @@ func main() {
 		fmt.Printf("*** dirname %s ***\n", exam)
 		examA := strings.Split(exam, "/")
 		err := makeDirs(*dest, examA[len(examA)-1])
-		
+
 		if err != nil {
 			log.Fatal(err)
 		}
