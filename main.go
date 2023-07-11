@@ -190,7 +190,6 @@ func createJson(q questions, path string) {
 	for _, v := range q {
 		questionTitle := strings.ReplaceAll(v.Title, " ", "_")
 		contents, err := json.Marshal(v)
-			
 
 		if err != nil {
 			log.Fatal(err)

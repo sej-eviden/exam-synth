@@ -19,12 +19,13 @@ any step away from this, is a step bakwards.
 
 ## Roadmap
 
-- [ ] Port all *features* from original Python code
+- [x] Port all *features* from original Python code
     - [x] Create necessary folders (results + specific)
-    - [ ] Scrape all questions from html
-    - [ ] Produce json
+    - [x] Scrape all questions from html
+    - [x] Produce json
 - [x] Create `img` folder too
 - [ ] Paste imgs from original to the destination folder
+[Possible solution](https://stackoverflow.com/questions/50740902/move-a-file-to-a-different-drive-with-go) 
 - [ ] Create `master` file with general information about the exam (img answers,
 empty answers, amount of questions, amount of topics, alternative names (code), etc.)
 - [ ] Give some useful output in terminal and describe next steps (terminal and, 
