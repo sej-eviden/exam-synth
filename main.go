@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -35,34 +36,55 @@ func readDir(dirName string) []string {
 //
 //	. raw HTML file
 //	. Contents of Assets folder
-func processDir(dirName string) ([]byte, error) {
+func processDir(dirName string) ([]byte, string, []string, error) {
 	fmt.Printf("\n** %s **\n", dirName)
 
 	dir, err := os.ReadDir(dirName)
+
+	var htmlFile []byte
+	assetDirName := ""
+	var imgs []string
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, d := range dir {
+		fmt.Printf("\ninsides of exams folder: %s\n", d.Name())
 		if d.IsDir() {
-			fmt.Printf("Dir inside dir -> %s\n", d.Name())
+			fmt.Printf("!!! Dir inside dir -> %s !!!\n", d.Name())
+			assetDirName = fmt.Sprintf("%s/%s", dirName, d.Name())
+			assetDir, err := os.ReadDir(assetDirName)
+
+			if err != nil {
+				fmt.Println("ERROR")
+				log.Fatal(err)
+			}
+			for _, img := range assetDir {
+				if strings.Index(img.Name(), ".png") >= 1 || strings.Index(img.Name(), ".jpg") >= 1 {
+					fmt.Println(img.Name())
+					imgs = append(imgs, img.Name())
+				}
+			}
 			// TODO copy paste images
 		} else {
 			fmt.Printf("File inside dir -> %s\n", d.Name())
 			fileName := fmt.Sprintf("%s/%s", dirName, d.Name())
-			file, err := os.ReadFile(fileName)
+			htmlFile, err = os.ReadFile(fileName)
 
 			if err != nil {
 				log.Fatalf("ERROR: %s doesn't exist", fileName)
 			} else {
 				fmt.Printf("Reading exam questions from %s\n", fileName)
 				// parseExam(file)
-				return file, nil
+				// return htmlFile, nil
 			}
 		}
 	}
-	return make([]byte, 0), errors.New("No html file found")
+	if len(htmlFile) <= 0 {
+		return make([]byte, 0), assetDirName, make([]string, 0), errors.New("No html file found")
+	}
+	return htmlFile, assetDirName, imgs, nil
 }
 
 type question struct {
@@ -125,7 +147,7 @@ func parseExam(file []byte) questionMap {
 				if strings.Index(p, "img") >= 0 {
 					src := strings.Split(strings.Split(p, "\"")[1], "/")
 					p = fmt.Sprintf("<img>/%s/img/%s<img>", examTitle, src[len(src)-1])
-					fmt.Println(questionTitle)
+					// fmt.Println(questionTitle)
 				}
 				question.Body = append(question.Body, p)
 			}
@@ -165,7 +187,7 @@ func parseExam(file []byte) questionMap {
 			src := strings.Split(strings.Split(line, "/")[2], "\"")[0]
 
 			p := fmt.Sprintf("<img>/%s/img/%s<img>", examTitle, src)
-			fmt.Println(p)
+			// fmt.Println(p)
 			question.Options = append(question.Options, p)
 
 			Questions[questionTitle] = question
@@ -203,7 +225,7 @@ func createJson(q questionMap, path string) {
 
 // makeDirs creates the necessary dirs:
 //
-//	1. Creates "outdir" directory
+//  1. Creates "outdir" directory
 //  2. Creates a directory per exam (with the `img` directory included)
 func makeDirs(outdir, examName string) (string, error) {
 
@@ -217,6 +239,32 @@ func makeDirs(outdir, examName string) (string, error) {
 	}
 
 	return examPath, nil
+}
+
+func copyImg(srcPath, destPath string) error {
+	inputFile, err := os.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("Couldn't open the source file: %s", err)
+	}
+	outputFile, err := os.Create(destPath)
+	if err != nil {
+		inputFile.Close()
+		return fmt.Errorf("Couldn't open dest file: %s", err)
+	}
+	defer outputFile.Close()
+
+	_, err = io.Copy(inputFile, outputFile)
+	inputFile.Close()
+	if err != nil {
+		return fmt.Errorf("Writing to output file failed: %s", err)
+	}
+
+	// Removes the original file. Don't really want this, but good to know
+	// err = os.Remove(srcPath)
+	// if err != nil {
+	// 	return fmt.Errorf("Failed removing original file: %s", err)
+	// }
+	return nil
 }
 
 func main() {
@@ -234,16 +282,25 @@ func main() {
 	for _, exam := range exams {
 		fmt.Printf("*** dirname %s ***\n", exam)
 		examA := strings.Split(exam, "/")
-		examPath, err := makeDirs(*dest, examA[len(examA)-1])
-
-		rawFile, _ := processDir(exam)
-
-		questions := parseExam(rawFile)
-		createJson(questions, examPath)
+		examName := examA[len(examA)-1]
+		examPath, err := makeDirs(*dest, examName)
 
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		rawFile, assetDirName, imgs, _ := processDir(exam)
+
+		questions := parseExam(rawFile)
+		createJson(questions, examPath)
+
+		for _, img := range imgs {
+			fmt.Printf("calling copy %s\n", img)
+			srcPath := fmt.Sprintf("%s/%s", assetDirName, img)
+			destPath := fmt.Sprintf("%s/%s/img/%s", *dest, examName, img)
+			copyImg(srcPath, destPath)
+		}
+
 	}
 
 	// fmt.Println("wello")
