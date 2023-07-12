@@ -72,10 +72,11 @@ type question struct {
 	Answer  string   `json:"answer"`
 }
 
-type questions map[string]question
+type questionMap map[string]question
 
 // parseExam reads through the contents of the exam file and creates a struct/json
-func parseExam(file []byte) questions {
+func parseExam(file []byte) questionMap {
+	// TODO extract repeated code into mini functions
 	fmt.Println("Parsing file")
 	rawFile := string(file[:])
 	lines := strings.Split(rawFile, "\n")
@@ -83,7 +84,7 @@ func parseExam(file []byte) questions {
 	var currentTitleI, questionI, currentBodyI, currentOptionI int
 
 	var question question
-	Questions := make(questions, 0)
+	Questions := make(questionMap, 0)
 
 	for i, line := range lines {
 		if i > 1 && strings.Index(lines[i-1], "<h1") >= 0 {
@@ -159,6 +160,7 @@ func parseExam(file []byte) questions {
 			question.Body = make([]string, 0)
 		}
 
+		// GET img answer
 		if strings.Index(line, "<span class=\"correct-answer\"><img") >= 0 {
 			src := strings.Split(strings.Split(line, "/")[2], "\"")[0]
 
@@ -173,20 +175,11 @@ func parseExam(file []byte) questions {
 			question.Body = make([]string, 0)
 		}
 
-		/*
-			            if line.find("<span class=\"correct-answer\"><img") >= 0:
-							src = line.split('/')[2].split('"')[0]
-							questions[title]["options"].append(f"<img>/{file_title}/img/{src}<img>")
-		*/
-
 	}
-	// fmt.Println("\n*****************")
-	// fmt.Printf("File title: %s\nNumber of questions: %d\nLast title: %s\n", fileTitle, questionI, title)
-	// fmt.Print("*****************\n\n")
 	return Questions
 }
 
-func createJson(q questions, path string) {
+func createJson(q questionMap, path string) {
 	for _, v := range q {
 		questionTitle := strings.ReplaceAll(v.Title, " ", "_")
 		contents, err := json.Marshal(v)
@@ -227,11 +220,10 @@ func makeDirs(outdir, examName string) (string, error) {
 }
 
 func main() {
+	// TODO create subcommand to show help
+	// "<bin> info/i" with argv[0] I guess
 	dir := flag.String("dir", "./exams", "Path to the folder where the \"raw\" exams are located")
 	dest := flag.String("dest", "./results", "Path to the output folder")
-	// src := flag.String("src", "./", "The folder or path where the aztfexport files are located")
-	// cref := flag.String("conf", "./", "The folder or path where the yaml config file is located")
-	// check := flag.Bool("validate", false, "Validate the contents of the yaml config against the terraform file")
 
 	flag.Parse()
 	fmt.Println(*dir)
