@@ -30,6 +30,13 @@ any step away from this, is a step bakwards.
 empty answers, amount of questions, amount of topics, alternative names (code), etc.)
 - [ ] Give some useful output in terminal and describe next steps (terminal and, 
 optionally, a small file)
+- [ ] Integrate gh actions to test, format, check and build the code
+- [ ] Organize code in a more reasonable structure
+
+### Test
+
+- [ ] Symbol rendering in website (<> get translated)
+- [ ] Write tests to run in CI
 
 ## Use
 
