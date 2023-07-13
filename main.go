@@ -9,7 +9,15 @@ import (
 	"log"
 	"os"
 	"strings"
+	"text/template"
 )
+
+type ExamInfo struct {
+	DirName string
+	// Code     string
+	// LongName string
+	// Total    int
+}
 
 // readDir reads the contents of the `exam` directory (2)
 func readDir(dirName string) []string {
@@ -50,6 +58,9 @@ func processDir(dirName string) ([]byte, string, []string, error) {
 	}
 
 	for _, d := range dir {
+		if d.Name() == "imagenes" {
+			continue
+		}
 		if d.IsDir() {
 			fmt.Printf("!!! Dir inside dir -> %s !!!\n", d.Name())
 			assetDirName = fmt.Sprintf("%s/%s", dirName, d.Name())
@@ -92,7 +103,7 @@ type question struct {
 type questionMap map[string]question
 
 // parseExam reads through the contents of the exam file and creates a struct/json
-func parseExam(file []byte) questionMap {
+func parseExam(file []byte) (questionMap, string) {
 	// TODO extract repeated code into mini functions
 	fmt.Println("Parsing file")
 	rawFile := string(file[:])
@@ -106,6 +117,7 @@ func parseExam(file []byte) questionMap {
 	for i, line := range lines {
 		if i > 1 && strings.Index(lines[i-1], "<h1") >= 0 {
 			examTitle = strings.Trim(strings.Split(line, "Exam Actual Questions")[0], " ")
+			fmt.Println("examTitle", examTitle)
 		}
 
 		if strings.Index(line, "<div class=\"card-header text-white bg-primary\">") >= 0 {
@@ -193,7 +205,7 @@ func parseExam(file []byte) questionMap {
 		}
 
 	}
-	return Questions
+	return Questions, examTitle
 }
 
 func createJson(q questionMap, path string) {
@@ -283,20 +295,23 @@ func main() {
 	fmt.Println(*dest)
 
 	exams := readDir(*dir)
+	masterInfoArr := []ExamInfo{}
 
 	for _, exam := range exams {
 		fmt.Printf("*** dirname %s ***\n", exam)
-		examA := strings.Split(exam, "/")
-		examName := examA[len(examA)-1]
+		rawFile, assetDirName, imgs, _ := processDir(exam)
+
+		questions, examTitle := parseExam(rawFile)
+		// examA := strings.Split(exam, "/")
+		examName := strings.ReplaceAll(strings.Split(examTitle, " - ")[0], " ", "_")
+
 		examPath, err := makeDirs(*dest, examName)
+		masterInfoArr = append(masterInfoArr, ExamInfo{DirName: examName})
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		rawFile, assetDirName, imgs, _ := processDir(exam)
-
-		questions := parseExam(rawFile)
 		createJson(questions, examPath)
 
 		for _, img := range imgs {
@@ -307,8 +322,17 @@ func main() {
 				log.Fatal(e)
 			}
 		}
+	}
+	tmplFile := "tmpl.tmpl"
+	tmpl, err := template.New(tmplFile).ParseFiles(tmplFile)
 
+	if err != nil {
+		fmt.Println("This is wrong")
 	}
 
-	// fmt.Println("wello")
+	fmt.Println(masterInfoArr)
+	err = tmpl.Execute(os.Stdout, masterInfoArr)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

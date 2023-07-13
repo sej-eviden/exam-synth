@@ -1,0 +1,16 @@
+# Master file #
+
+Copy and paste the exam files in the necessary folders: json files inside the `src/content` directory
+and images in the public directory.
+
+Next, update the `config.ts` file located inside the `content` directory with the name of the folder of the newly added exams:
+
+```js
+export const collections = {
+    ...
+    {{range .}}
+    "{{.DirName}}",{{end}} 
+    ...
+}
+```
+
