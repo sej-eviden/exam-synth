@@ -10,7 +10,7 @@ Pseudo-scrape html page to get json data of exams & questions.
 Ease of use and portability are a must. The main focus is to make life easier,
 any step away from this, is a step bakwards.
 
-### Main points to improve:
+### Main points to improve
 
 - Portability
 - Size
@@ -20,15 +20,14 @@ any step away from this, is a step bakwards.
 ## Roadmap
 
 - [x] Port all *features* from original Python code
-    - [x] Create necessary folders (results + specific)
-    - [x] Scrape all questions from html
-    - [x] Produce json
+  - [x] Create necessary folders (results + specific)
+  - [x] Scrape all questions from html
+  - [x] Produce json
 - [x] Create `img` folder too
-- [ ] Paste imgs from original to the destination folder
-[Possible solution](https://stackoverflow.com/questions/50740902/move-a-file-to-a-different-drive-with-go) 
+- [x] Paste imgs from original to the destination folder
 - [ ] Create `master` file with general information about the exam (img answers,
 empty answers, amount of questions, amount of topics, alternative names (code), etc.)
-- [ ] Give some useful output in terminal and describe next steps (terminal and, 
+- [ ] Give some useful output in terminal and describe next steps (terminal and,
 optionally, a small file)
 - [ ] Integrate gh actions to test, format, check and build the code
 - [ ] Organize code in a more reasonable structure
@@ -51,4 +50,3 @@ e-synth ./path/to/exams -dest results
 
 Where `./path/to/exams` is the folder where the exams are located, and `results`
 is the folder where the output will be placed.
-

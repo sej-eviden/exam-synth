@@ -50,7 +50,6 @@ func processDir(dirName string) ([]byte, string, []string, error) {
 	}
 
 	for _, d := range dir {
-		fmt.Printf("\ninsides of exams folder: %s\n", d.Name())
 		if d.IsDir() {
 			fmt.Printf("!!! Dir inside dir -> %s !!!\n", d.Name())
 			assetDirName = fmt.Sprintf("%s/%s", dirName, d.Name())
@@ -62,22 +61,18 @@ func processDir(dirName string) ([]byte, string, []string, error) {
 			}
 			for _, img := range assetDir {
 				if strings.Index(img.Name(), ".png") >= 1 || strings.Index(img.Name(), ".jpg") >= 1 {
-					fmt.Println(img.Name())
+					// fmt.Println(img.Name())
 					imgs = append(imgs, img.Name())
 				}
 			}
 			// TODO copy paste images
 		} else {
-			fmt.Printf("File inside dir -> %s\n", d.Name())
+			// fmt.Printf("File inside dir -> %s\n", d.Name())
 			fileName := fmt.Sprintf("%s/%s", dirName, d.Name())
 			htmlFile, err = os.ReadFile(fileName)
 
 			if err != nil {
 				log.Fatalf("ERROR: %s doesn't exist", fileName)
-			} else {
-				fmt.Printf("Reading exam questions from %s\n", fileName)
-				// parseExam(file)
-				// return htmlFile, nil
 			}
 		}
 	}
@@ -246,14 +241,24 @@ func copyImg(srcPath, destPath string) error {
 	if err != nil {
 		return fmt.Errorf("Couldn't open the source file: %s", err)
 	}
+
+	stats, statErr := inputFile.Stat()
+	if statErr != nil {
+		return statErr
+	}
+
+	if stats.Size() <= 0 {
+		return errors.New("Empty file")
+	}
 	outputFile, err := os.Create(destPath)
+
 	if err != nil {
 		inputFile.Close()
 		return fmt.Errorf("Couldn't open dest file: %s", err)
 	}
 	defer outputFile.Close()
 
-	_, err = io.Copy(inputFile, outputFile)
+	_, err = io.Copy(outputFile, inputFile)
 	inputFile.Close()
 	if err != nil {
 		return fmt.Errorf("Writing to output file failed: %s", err)
@@ -295,10 +300,12 @@ func main() {
 		createJson(questions, examPath)
 
 		for _, img := range imgs {
-			fmt.Printf("calling copy %s\n", img)
 			srcPath := fmt.Sprintf("%s/%s", assetDirName, img)
 			destPath := fmt.Sprintf("%s/%s/img/%s", *dest, examName, img)
-			copyImg(srcPath, destPath)
+			e := copyImg(srcPath, destPath)
+			if e != nil {
+				log.Fatal(e)
+			}
 		}
 
 	}
