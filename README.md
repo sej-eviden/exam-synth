@@ -25,7 +25,7 @@ any step away from this, is a step bakwards.
   - [x] Produce json
 - [x] Create `img` folder too
 - [x] Paste imgs from original to the destination folder
-- [ ] Create `master` file with general information about the exam (img answers,
+- [x] Create `master` file with general information about the exam (img answers,
 empty answers, amount of questions, amount of topics, alternative names (code), etc.)
 - [ ] Give some useful output in terminal and describe next steps (terminal and,
 optionally, a small file)

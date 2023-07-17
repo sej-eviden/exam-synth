@@ -14,9 +14,7 @@ import (
 
 type ExamInfo struct {
 	DirName string
-	// Code     string
-	// LongName string
-	// Total    int
+	Total   int
 }
 
 // readDir reads the contents of the `exam` directory (2)
@@ -115,12 +113,12 @@ func parseExam(file []byte) (questionMap, string) {
 	Questions := make(questionMap, 0)
 
 	for i, line := range lines {
-		if i > 1 && strings.Index(lines[i-1], "<h1") >= 0 {
+		if i > 1 && strings.Contains(lines[i-1], "<h1") {
 			examTitle = strings.Trim(strings.Split(line, "Exam Actual Questions")[0], " ")
 			fmt.Println("examTitle", examTitle)
 		}
 
-		if strings.Index(line, "<div class=\"card-header text-white bg-primary\">") >= 0 {
+		if strings.Contains(line, "<div class=\"card-header text-white bg-primary\">") {
 			currentTitleI = i
 			questionI += 1
 		}
@@ -143,7 +141,7 @@ func parseExam(file []byte) (questionMap, string) {
 		}
 
 		// GET Body
-		if strings.Index(line, "<p class=\"card-text\">") >= 0 {
+		if strings.Contains(line, "<p class=\"card-text\">") {
 			currentBodyI = i
 		}
 
@@ -151,7 +149,7 @@ func parseExam(file []byte) (questionMap, string) {
 			paragraphs := strings.Split(strings.Trim(line, " "), "<br>")
 
 			for _, p := range paragraphs {
-				if strings.Index(p, "img") >= 0 {
+				if strings.Contains(p, "img") {
 					src := strings.Split(strings.Split(p, "\"")[1], "/")
 					p = fmt.Sprintf("<img>/%s/img/%s<img>", examTitle, src[len(src)-1])
 					// fmt.Println(questionTitle)
@@ -160,13 +158,13 @@ func parseExam(file []byte) (questionMap, string) {
 			}
 		}
 
-		if strings.Index(line, "<span class=\"inquestion-subtitle mb-0 mt-3\">Question</span>") >= 0 {
+		if strings.Contains(line, "<span class=\"inquestion-subtitle mb-0 mt-3\">Question</span>") {
 			question.Body = append(question.Body, "Question:")
 			currentBodyI = i
 		}
 
 		// GET options
-		if strings.Index(line, "<li class=\"multi-choice-item") >= 0 {
+		if strings.Contains(line, "<li class=\"multi-choice-item") {
 			currentOptionI = i
 		}
 
@@ -175,28 +173,26 @@ func parseExam(file []byte) (questionMap, string) {
 		}
 
 		// GET answer
-		if strings.Index(line, "<div class=\"vote-bar progress-bar bg-primary\"") >= 0 && question.Title != "" {
+		if strings.Contains(line, "<div class=\"vote-bar progress-bar bg-primary\"") && question.Title != "" {
 			firstSplit := strings.Split(line, "<div class=\"vote-bar progress-bar bg-primary\"")[1]
 			ansStart := strings.Index(firstSplit, ">")
 			secondSplit := firstSplit[ansStart:]
 			ans := secondSplit[1:strings.Index(secondSplit, " ")]
 
 			question.Answer = ans
-			Questions[questionTitle] = question
-			question.Answer = ""
-			question.Title = ""
-			question.Options = make([]string, 0)
-			question.Body = make([]string, 0)
 		}
 
 		// GET img answer
-		if strings.Index(line, "<span class=\"correct-answer\"><img") >= 0 {
+		if strings.Contains(line, "<span class=\"correct-answer\"><img") {
 			src := strings.Split(strings.Split(line, "/")[2], "\"")[0]
 
 			p := fmt.Sprintf("<img>/%s/img/%s<img>", examTitle, src)
 			// fmt.Println(p)
 			question.Options = append(question.Options, p)
 
+		}
+
+		if strings.Contains(line, "<!-- / Question  -->") {
 			Questions[questionTitle] = question
 			question.Answer = ""
 			question.Title = ""
@@ -251,7 +247,7 @@ func makeDirs(outdir, examName string) (string, error) {
 func copyImg(srcPath, destPath string) error {
 	inputFile, err := os.Open(srcPath)
 	if err != nil {
-		return fmt.Errorf("Couldn't open the source file: %s", err)
+		return fmt.Errorf("couldn't open the source file: %s", err)
 	}
 
 	stats, statErr := inputFile.Stat()
@@ -260,20 +256,20 @@ func copyImg(srcPath, destPath string) error {
 	}
 
 	if stats.Size() <= 0 {
-		return errors.New("Empty file")
+		return errors.New("empty file")
 	}
 	outputFile, err := os.Create(destPath)
 
 	if err != nil {
 		inputFile.Close()
-		return fmt.Errorf("Couldn't open dest file: %s", err)
+		return fmt.Errorf("couldn't open dest file: %s", err)
 	}
 	defer outputFile.Close()
 
 	_, err = io.Copy(outputFile, inputFile)
 	inputFile.Close()
 	if err != nil {
-		return fmt.Errorf("Writing to output file failed: %s", err)
+		return fmt.Errorf("writing to output file failed: %s", err)
 	}
 
 	// Removes the original file. Don't really want this, but good to know
@@ -305,7 +301,7 @@ func main() {
 		examName := strings.ReplaceAll(strings.Split(examTitle, " - ")[0], " ", "_")
 
 		examPath, err := makeDirs(*dest, examName)
-		masterInfoArr = append(masterInfoArr, ExamInfo{DirName: examName})
+		masterInfoArr = append(masterInfoArr, ExamInfo{DirName: examName, Total: len(questions)})
 
 		if err != nil {
 			log.Fatal(err)
@@ -329,8 +325,12 @@ func main() {
 		fmt.Println("This is wrong")
 	}
 
-	fmt.Println(masterInfoArr)
-	err = tmpl.Execute(os.Stdout, masterInfoArr)
+	masterFile, err := os.Create(*dest + "/master.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Println(masterInfoArr)
+	err = tmpl.Execute(masterFile, masterInfoArr)
 	if err != nil {
 		fmt.Println(err)
 	}
