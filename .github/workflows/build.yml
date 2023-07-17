@@ -1,0 +1,47 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Build & Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.20.x'
+
+    - name: Build Linux
+      run: go build -o ./bin/linux/esynth ./...
+      
+    - name: Build Windows
+      run: GOOS=windows GOARCH=amd64 go build -o ./bin/win/esynth.exe ./...
+      
+    - name: Build MacOS
+      run: GOOS=darwin GOARCH=amd64 go build -o ./bin/mac/esynth ./main.go
+      
+    # - name: Run & output
+    #   run: ./bin/main > ./results.txt && cat ./results.txt && pwd
+      
+    - name: Upload Go results
+      uses: actions/upload-artifact@v3
+      with:
+        name: Go-results
+        path: ./bin/
+      
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          ./bin/mac/esynth
+          ./bin/win/esynth.exe
+          ./bin/linux/esynth
