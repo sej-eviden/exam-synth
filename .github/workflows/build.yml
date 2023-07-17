@@ -21,6 +21,8 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: '1.20.x'
+    - name: Show ref_name
+      run: echo ${{ github.ref_name }}
 
     - name: Build Linux
       run: go build -o ./bin/linux/esynth${{github.ref_name}}_linux ./...
