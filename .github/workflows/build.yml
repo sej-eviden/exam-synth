@@ -29,7 +29,7 @@ jobs:
       run: GOOS=windows GOARCH=amd64 go build -o ./bin/win/esynth.exe ./...
       
     - name: Build MacOS
-      run: GOOS=darwin GOARCH=amd64 go build -o ./bin/mac/esynth ./main.go
+      run: GOOS=darwin GOARCH=amd64 go build -o ./bin/mac/esynth ./...
       
     # - name: Run & output
     #   run: ./bin/main > ./results.txt && cat ./results.txt && pwd
