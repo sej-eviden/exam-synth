@@ -4,10 +4,16 @@
 name: Build & Deploy
 
 on:
-  push
+  push:
+    branches: 
+      - "main"
+    tags:
+      - "v*"
 
 jobs:
   build:
+    permissions: 
+      contents: write
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -42,3 +48,4 @@ jobs:
           ./bin/mac/esynth
           ./bin/win/esynth.exe
           ./bin/linux/esynth
+    
