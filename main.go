@@ -43,7 +43,7 @@ func readDir(dirName string) []string {
 //	. raw HTML file
 //	. Contents of Assets folder
 func processDir(dirName string) ([]byte, string, []string, error) {
-	fmt.Printf("\n** %s **\n", dirName)
+	fmt.Printf("\n%s\n", dirName)
 
 	dir, err := os.ReadDir(dirName)
 
@@ -60,7 +60,7 @@ func processDir(dirName string) ([]byte, string, []string, error) {
 			continue
 		}
 		if d.IsDir() {
-			fmt.Printf("!!! Dir inside dir -> %s !!!\n", d.Name())
+			// fmt.Printf("!!! Dir inside dir -> %s !!!\n", d.Name())
 			assetDirName = fmt.Sprintf("%s/%s", dirName, d.Name())
 			assetDir, err := os.ReadDir(assetDirName)
 
@@ -86,7 +86,7 @@ func processDir(dirName string) ([]byte, string, []string, error) {
 		}
 	}
 	if len(htmlFile) <= 0 {
-		return make([]byte, 0), assetDirName, make([]string, 0), errors.New("No html file found")
+		return make([]byte, 0), assetDirName, make([]string, 0), errors.New("no html file found")
 	}
 	return htmlFile, assetDirName, imgs, nil
 }
@@ -103,7 +103,7 @@ type questionMap map[string]question
 // parseExam reads through the contents of the exam file and creates a struct/json
 func parseExam(file []byte) (questionMap, string) {
 	// TODO extract repeated code into mini functions
-	fmt.Println("Parsing file")
+	// fmt.Println("Parsing file")
 	rawFile := string(file[:])
 	lines := strings.Split(rawFile, "\n")
 	var questionTitle, examTitle string
@@ -115,7 +115,7 @@ func parseExam(file []byte) (questionMap, string) {
 	for i, line := range lines {
 		if i > 1 && strings.Contains(lines[i-1], "<h1") {
 			examTitle = strings.Trim(strings.Split(line, "Exam Actual Questions")[0], " ")
-			fmt.Println("examTitle", examTitle)
+			// fmt.Println("Title", examTitle)
 		}
 
 		if strings.Contains(line, "<div class=\"card-header text-white bg-primary\">") {
@@ -232,7 +232,7 @@ func createJson(q questionMap, path string) {
 //  2. Creates a directory per exam (with the `img` directory included)
 func makeDirs(outdir, examName string) (string, error) {
 
-	fmt.Println("Making necessary dirs")
+	// fmt.Println("Making necessary dirs")
 	examPath := fmt.Sprintf("./%s/%s", outdir, examName)
 	path := fmt.Sprintf("%s/img", examPath)
 	err := os.MkdirAll(path, os.ModePerm)
@@ -287,18 +287,19 @@ func main() {
 	dest := flag.String("dest", "./results", "Path to the output folder")
 
 	flag.Parse()
-	fmt.Println(*dir)
-	fmt.Println(*dest)
+	fmt.Println("Exam files ->\t", *dir)
+	fmt.Println("Destination folder ->\t", *dest)
 
 	exams := readDir(*dir)
 	masterInfoArr := []ExamInfo{}
 
 	for _, exam := range exams {
-		fmt.Printf("*** dirname %s ***\n", exam)
+		// fmt.Printf("*** dirname %s ***\n", exam)
 		rawFile, assetDirName, imgs, _ := processDir(exam)
 
 		questions, examTitle := parseExam(rawFile)
 		examName := strings.ReplaceAll(strings.Split(examTitle, " - ")[0], " ", "_")
+		fmt.Printf("Dest exam folder ->\t%s/%s\n", *dest, examName)
 
 		examPath, err := makeDirs(*dest, examName)
 		masterInfoArr = append(masterInfoArr, ExamInfo{DirName: examName, Total: len(questions)})
@@ -317,6 +318,8 @@ func main() {
 				log.Fatal(e)
 			}
 		}
+
+		fmt.Println("All files successfully created.")
 	}
 	tmplFile := "master.tmpl"
 	tmpl, err := template.New(tmplFile).ParseFiles(tmplFile)
@@ -334,4 +337,21 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Println()
+	fmt.Println()
+	fmt.Print("\nTo continue with the process of adding new exams,\nplease refer to the steps detailed on the README.md file in the exam repo.\n")
+	fmt.Print("\nAll the necessary changes/additions inside the files of the exam source code\nare located in the results/master.txt file.\n")
+	fmt.Print("\n* Move the img folder inside each exam folder and paste them inside the\n  public directory, in the corresponding exams folder")
+	fmt.Print("\n* Copy the json files corresponding to each exam and paste them\n  inside the proper folder in the src/content folder")
+	fmt.Print("\n* Modify the source code with the lines specified in master.txt")
+	fmt.Print("\n  NOTE: only copy the line of the arrays or objects where the exam information is located")
+	fmt.Print("\n* Commit with a message that starts with \"Update:\" and push the modified code.")
+	fmt.Println()
+	fmt.Println()
+	// err = tmpl.Execute(os.Stdout, masterInfoArr)
+
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
 }

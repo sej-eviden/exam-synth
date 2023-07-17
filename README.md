@@ -27,7 +27,7 @@ any step away from this, is a step bakwards.
 - [x] Paste imgs from original to the destination folder
 - [x] Create `master` file with general information about the exam (img answers,
 empty answers, amount of questions, amount of topics, alternative names (code), etc.)
-- [ ] Give some useful output in terminal and describe next steps (terminal and,
+- [x] Give some useful output in terminal and describe next steps (terminal and,
 optionally, a small file)
 - [ ] Integrate gh actions to test, format, check and build the code
 - [ ] Organize code in a more reasonable structure
