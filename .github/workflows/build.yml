@@ -7,6 +7,9 @@ on:
   push:
     branches: 
       - "main"
+    paths-ignore: 
+      - "README.md"
+      - ".github/**"
     tags:
       - "v*"
 
@@ -25,13 +28,13 @@ jobs:
       run: echo ${{ github.ref_name }}
 
     - name: Build Linux
-      run: go build -o ./bin/linux/esynth${{github.ref_name}}_linux ./...
+      run: go build -o ./bin/linux/esynth_${{github.ref_name}}_linux ./...
       
     - name: Build Windows
-      run: GOOS=windows GOARCH=amd64 go build -o ./bin/win/esynth${{github.ref_name}}_win.exe ./...
+      run: GOOS=windows GOARCH=amd64 go build -o ./bin/win/esynth_${{github.ref_name}}_win.exe ./...
       
     - name: Build MacOS
-      run: GOOS=darwin GOARCH=amd64 go build -o ./bin/mac/esynth${{github.ref_name}}_mac.exe ./...
+      run: GOOS=darwin GOARCH=amd64 go build -o ./bin/mac/esynth_${{github.ref_name}}_mac.exe ./...
       
     # - name: Run & output
     #   run: ./bin/main > ./results.txt && cat ./results.txt && pwd
