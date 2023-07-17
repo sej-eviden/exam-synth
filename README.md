@@ -2,8 +2,6 @@
 
 ## Purpose
 
-ts, ts , ts
-
 > Scrape Exam Topics exams, but better.
 
 Pseudo-scrape html page to get json data of exams & questions.
@@ -30,7 +28,11 @@ empty answers, amount of questions, amount of topics, alternative names (code), 
 - [x] Give some useful output in terminal and describe next steps (terminal and,
 optionally, a small file)
 - [ ] Integrate gh actions to test, format, check and build the code
-- [ ] Organize code in a more reasonable structure
+  - [ ] test
+  - [ ] check errors
+  - [ ] format
+  - [x] build
+- [ ] Organize code with a more reasonable structure
 
 ### Test
 
@@ -45,8 +47,10 @@ optionally, a small file)
 3. Run from the terminal inside the `main` folder
 
 ```sh
-e-synth ./path/to/exams -dest results
+.\esynth.exe
+# If a specific origin or result folder is necessary
+.\esynth.exe .\path\to\exams -dest results
 ```
 
-Where `./path/to/exams` is the folder where the exams are located, and `results`
+Where `.\path\to\exams` is the folder where the exams are located, and `results`
 is the folder where the output will be placed.
