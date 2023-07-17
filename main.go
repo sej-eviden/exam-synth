@@ -302,7 +302,6 @@ func main() {
 		rawFile, assetDirName, imgs, _ := processDir(exam)
 
 		questions, examTitle := parseExam(rawFile)
-		// examA := strings.Split(exam, "/")
 		examName := strings.ReplaceAll(strings.Split(examTitle, " - ")[0], " ", "_")
 
 		examPath, err := makeDirs(*dest, examName)
@@ -323,7 +322,7 @@ func main() {
 			}
 		}
 	}
-	tmplFile := "tmpl.tmpl"
+	tmplFile := "master.tmpl"
 	tmpl, err := template.New(tmplFile).ParseFiles(tmplFile)
 
 	if err != nil {
