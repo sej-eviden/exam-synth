@@ -60,7 +60,6 @@ func processDir(dirName string) ([]byte, string, []string, error) {
 			continue
 		}
 		if d.IsDir() {
-			// fmt.Printf("!!! Dir inside dir -> %s !!!\n", d.Name())
 			assetDirName = fmt.Sprintf("%s/%s", dirName, d.Name())
 			assetDir, err := os.ReadDir(assetDirName)
 
@@ -70,13 +69,11 @@ func processDir(dirName string) ([]byte, string, []string, error) {
 			}
 			for _, img := range assetDir {
 				if strings.Index(img.Name(), ".png") >= 1 || strings.Index(img.Name(), ".jpg") >= 1 {
-					// fmt.Println(img.Name())
 					imgs = append(imgs, img.Name())
 				}
 			}
 			// TODO copy paste images
 		} else {
-			// fmt.Printf("File inside dir -> %s\n", d.Name())
 			fileName := fmt.Sprintf("%s/%s", dirName, d.Name())
 			htmlFile, err = os.ReadFile(fileName)
 
@@ -103,7 +100,6 @@ type questionMap map[string]question
 // parseExam reads through the contents of the exam file and creates a struct/json
 func parseExam(file []byte) (questionMap, string) {
 	// TODO extract repeated code into mini functions
-	// fmt.Println("Parsing file")
 	rawFile := string(file[:])
 	lines := strings.Split(rawFile, "\n")
 	var questionTitle, examTitle string
@@ -115,7 +111,6 @@ func parseExam(file []byte) (questionMap, string) {
 	for i, line := range lines {
 		if i > 1 && strings.Contains(lines[i-1], "<h1") {
 			examTitle = strings.Trim(strings.Split(line, "Exam Actual Questions")[0], " ")
-			// fmt.Println("Title", examTitle)
 		}
 
 		if strings.Contains(line, "<div class=\"card-header text-white bg-primary\">") {
@@ -127,14 +122,12 @@ func parseExam(file []byte) (questionMap, string) {
 			titleA := strings.Fields(strings.Trim(strings.Replace(line, "#", "", 1), " "))
 			questionTitle = titleA[0] + fmt.Sprintf(" %03s", titleA[1])
 
-			// fmt.Print(title)
 		}
 
 		if i == currentTitleI+3 && questionI > 0 {
 			topicA := strings.Fields(strings.Trim(line, " "))
 			topic := topicA[0] + fmt.Sprintf(" %03s", topicA[1])
 			questionTitle = fmt.Sprintf("%s %s", topic, questionTitle)
-			// fmt.Printf(" | %s\n", topic)
 
 			question.Title = questionTitle
 			// title = " ".join([word.rjust(3, "0") for word in title.split(" ") if word != "|"])
@@ -152,7 +145,6 @@ func parseExam(file []byte) (questionMap, string) {
 				if strings.Contains(p, "img") {
 					src := strings.Split(strings.Split(p, "\"")[1], "/")
 					p = fmt.Sprintf("<img>/%s/img/%s<img>", examTitle, src[len(src)-1])
-					// fmt.Println(questionTitle)
 				}
 				question.Body = append(question.Body, p)
 			}
@@ -187,7 +179,6 @@ func parseExam(file []byte) (questionMap, string) {
 			src := strings.Split(strings.Split(line, "/")[2], "\"")[0]
 
 			p := fmt.Sprintf("<img>/%s/img/%s<img>", examTitle, src)
-			// fmt.Println(p)
 			question.Options = append(question.Options, p)
 
 		}
@@ -230,18 +221,24 @@ func createJson(q questionMap, path string) {
 //
 //  1. Creates "outdir" directory
 //  2. Creates a directory per exam (with the `img` directory included)
-func makeDirs(outdir, examName string) (string, error) {
+func makeDirs(outdir, examName string) (string, string, error) {
 
-	// fmt.Println("Making necessary dirs")
-	examPath := fmt.Sprintf("./%s/%s", outdir, examName)
-	path := fmt.Sprintf("%s/img", examPath)
-	err := os.MkdirAll(path, os.ModePerm)
+	publicPath := fmt.Sprintf("%s/public/%s", outdir, examName)
+	contentPath := fmt.Sprintf("%s/content/%s", outdir, examName)
+	path := fmt.Sprintf("%s/img", publicPath)
+	err := os.MkdirAll(contentPath, os.ModePerm)
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return examPath, nil
+	err = os.MkdirAll(path, os.ModePerm)
+
+	if err != nil {
+		return "", "", err
+	}
+
+	return publicPath, contentPath, nil
 }
 
 func copyImg(srcPath, destPath string) error {
@@ -294,25 +291,27 @@ func main() {
 	masterInfoArr := []ExamInfo{}
 
 	for _, exam := range exams {
-		// fmt.Printf("*** dirname %s ***\n", exam)
 		rawFile, assetDirName, imgs, _ := processDir(exam)
 
 		questions, examTitle := parseExam(rawFile)
 		examName := strings.ReplaceAll(strings.Split(examTitle, " - ")[0], " ", "_")
-		fmt.Printf("Dest exam folder ->\t%s/%s\n", *dest, examName)
 
-		examPath, err := makeDirs(*dest, examName)
+		publicPath, contentPath, err := makeDirs(*dest, examName)
+
+		fmt.Printf("Content exam folder ->\t%s\n", contentPath)
+		fmt.Printf("Public exam folder ->\t%s\n", publicPath)
 		masterInfoArr = append(masterInfoArr, ExamInfo{DirName: examName, Total: len(questions)})
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		createJson(questions, examPath)
+		createJson(questions, contentPath)
 
 		for _, img := range imgs {
 			srcPath := fmt.Sprintf("%s/%s", assetDirName, img)
-			destPath := fmt.Sprintf("%s/%s/img/%s", *dest, examName, img)
+			destPath := fmt.Sprintf("%s/img/%s", publicPath, img)
+
 			e := copyImg(srcPath, destPath)
 			if e != nil {
 				log.Fatal(e)
@@ -332,7 +331,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// fmt.Println(masterInfoArr)
 	err = tmpl.Execute(masterFile, masterInfoArr)
 	if err != nil {
 		fmt.Println(err)
@@ -341,9 +339,8 @@ func main() {
 	fmt.Println()
 	fmt.Print("\nTo continue with the process of adding new exams,\nplease refer to the steps detailed on the README.md file in the exam repo.\n")
 	fmt.Print("\nAll the necessary changes/additions inside the files of the exam source code\nare located in the results/master.txt file.\n")
-	fmt.Print("\n* Move the img folder inside each exam folder and paste them inside the\n  public directory, in the corresponding exams folder")
-	fmt.Print("\n* Copy the json files corresponding to each exam and paste them\n  inside the proper folder in the src/content folder")
-	fmt.Print("\n* Modify the source code with the lines specified in master.txt")
+	fmt.Print("\n* Move the folders inside 'result' dir to the corresponging\n  folders in the source code")
+	fmt.Print("\n* Modify the source code with the lines specified in master.txt\n  (inside 'results' dir)")
 	fmt.Print("\n  NOTE: only copy the line of the arrays or objects where the exam information is located")
 	fmt.Print("\n* Commit with a message that starts with \"Update:\" and push the modified code.")
 	fmt.Println()

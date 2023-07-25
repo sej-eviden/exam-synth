@@ -4,7 +4,7 @@
 export const collections = {
     ...
     {{ range . }}
-    "{{ .DirName }}"{{ end }} 
+    "{{ .DirName }}": examCollection,{{ end }} 
 }
 ```
 
@@ -12,9 +12,9 @@ export const collections = {
 
 ```js
 const exams = [
+    ...
     {{ range . }}
     ["{{ .DirName }}", "<exam name>", "<exam code>"],{{ end }}
-    ...
 ]
 ```
 
@@ -22,9 +22,9 @@ const exams = [
 
 ```js
 return [
+    ...
     {{ range . }}
     { name: "{{ .DirName }}, total: {{ .Total }} },{{ end }}
-    ...
 ]
 ```
 
@@ -33,9 +33,9 @@ return [
 ```js
 export async function getStaticPaths({ paginate }: any) {
     const allExams = [
+        ...
         {{ range . }}
         await getCollection("{{ .DirName }}"),{{ end }}
-        ...
     ]
 }
 ```
