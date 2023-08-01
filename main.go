@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -11,6 +12,9 @@ import (
 	"strings"
 	"text/template"
 )
+
+//go:embed master.tmpl
+var eTmplFile string
 
 type ExamInfo struct {
 	DirName string
@@ -321,7 +325,8 @@ func main() {
 		fmt.Println("All files successfully created.")
 	}
 	tmplFile := "master.tmpl"
-	tmpl, err := template.New(tmplFile).ParseFiles(tmplFile)
+	// tmpl, err := template.New(tmplFile).ParseFiles(tmplFile)
+	tmpl, err := template.New(tmplFile).Parse(eTmplFile)
 
 	if err != nil {
 		fmt.Println("This is wrong")
